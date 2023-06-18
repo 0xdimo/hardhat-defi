@@ -16,11 +16,26 @@ async function main() {
     await lendingPool.deposit(wethTokenAddress, AMOUNT, deployer, 0)
     console.log("Deposited!!!")
 
-    let { availableBorrowsETH, totalDetbETH } = await getBorrowUserData(lendingPool, deployer)
+    let { availableBorrowsETH, totalDebtETH } = await getBorrowUserData(lendingPool, deployer)
+    console.log(`******************************** ${totalDebtETH}`)
     const daiPriceInEth = await getDaiPrice()
     const amountDaiToBorrow = availableBorrowsETH.toString() * 0.95 * (1 / daiPriceInEth.toNumber())
 
-    console.log(`You can borrow ${amountDaiToBorrow} DAI`)
+    const amountDaiToBorrowInWei = ethers.utils.parseEther(amountDaiToBorrow.toString())
+    await borrowDai(
+        "0x6B175474E89094C44Da98b954EedeAC495271d0F",
+        lendingPool,
+        amountDaiToBorrowInWei,
+        deployer
+    )
+
+    await getBorrowUserData(lendingPool, deployer)
+}
+
+async function borrowDai(daiAddress, lendingPool, amountDaiToBorrowInWei, account) {
+    const borrowTx = await lendingPool.borrow(daiAddress, amountDaiToBorrowInWei, 1, 0, account)
+    await borrowTx.wait(1)
+    console.log("You've borrowed!")
 }
 
 async function getDaiPrice() {
@@ -30,17 +45,16 @@ async function getDaiPrice() {
     ) // no need of third argument account, because we won't sign anything
     const { answer } = await daiEthPriceFeed.latestRoundData()
     console.log(`The DAI/ETH price is ${answer.toString()}`)
-    const amountDaiToBorrowInWei = ethers.utils.parseEther(amountDaiToBorrow.toString())
     return answer
 }
 
 async function getBorrowUserData(lendingPool, account) {
-    const { totalCollateralETH, totalDetbETH, availableBorrowsETH } =
+    const { totalCollateralETH, totalDebtETH, availableBorrowsETH } =
         await lendingPool.getUserAccountData(account)
     console.log(`ETH Deposited: ${totalCollateralETH} ETH`)
-    console.log(`ETH Borrowed:  ${totalDetbETH} ETH`)
+    console.log(`ETH Borrowed:  ${totalDebtETH} ETH`)
     console.log(`Available ETH to borrow: ${availableBorrowsETH} ETH`)
-    return { availableBorrowsETH, totalDetbETH }
+    return { availableBorrowsETH, totalDebtETH }
 }
 
 //You must approve token before deposit
