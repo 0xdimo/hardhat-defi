@@ -17,6 +17,21 @@ async function main() {
     console.log("Deposited!!!")
 
     let { availableBorrowsETH, totalDetbETH } = await getBorrowUserData(lendingPool, deployer)
+    const daiPriceInEth = await getDaiPrice()
+    const amountDaiToBorrow = availableBorrowsETH.toString() * 0.95 * (1 / daiPriceInEth.toNumber())
+
+    console.log(`You can borrow ${amountDaiToBorrow} DAI`)
+}
+
+async function getDaiPrice() {
+    const daiEthPriceFeed = await ethers.getContractAt(
+        "AggregatorV3Interface",
+        "0x773616e4d11a78f511299002da57a0a94577f1f4"
+    ) // no need of third argument account, because we won't sign anything
+    const { answer } = await daiEthPriceFeed.latestRoundData()
+    console.log(`The DAI/ETH price is ${answer.toString()}`)
+    const amountDaiToBorrowInWei = ethers.utils.parseEther(amountDaiToBorrow.toString())
+    return answer
 }
 
 async function getBorrowUserData(lendingPool, account) {
