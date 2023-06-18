@@ -32,6 +32,13 @@ async function main() {
     await getBorrowUserData(lendingPool, deployer)
 }
 
+async function repay(amount, daiAddress, lendingPool, account) {
+    await approveErc20(daiAddress, lendingPool.address, amount, account)
+    const repayTx = await lendingPool.repay(daiAddress, amount, 1, account)
+    await repayTx.wait(1)
+    console.log("Repayed!!!")
+}
+
 async function borrowDai(daiAddress, lendingPool, amountDaiToBorrowInWei, account) {
     const borrowTx = await lendingPool.borrow(daiAddress, amountDaiToBorrowInWei, 1, 0, account)
     await borrowTx.wait(1)
