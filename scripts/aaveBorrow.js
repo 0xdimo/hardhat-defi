@@ -15,6 +15,17 @@ async function main() {
     console.log("Depositing...")
     await lendingPool.deposit(wethTokenAddress, AMOUNT, deployer, 0)
     console.log("Deposited!!!")
+
+    let { availableBorrowsETH, totalDetbETH } = await getBorrowUserData(lendingPool, deployer)
+}
+
+async function getBorrowUserData(lendingPool, account) {
+    const { totalCollateralETH, totalDetbETH, availableBorrowsETH } =
+        await lendingPool.getUserAccountData(account)
+    console.log(`ETH Deposited: ${totalCollateralETH} ETH`)
+    console.log(`ETH Borrowed:  ${totalDetbETH} ETH`)
+    console.log(`Available ETH to borrow: ${availableBorrowsETH} ETH`)
+    return { availableBorrowsETH, totalDetbETH }
 }
 
 //You must approve token before deposit
